@@ -45,7 +45,7 @@ mPage = request.read().lower().decode('utf8')
 mPage = etree.HTML(mPage)
 XPATH_NEXT_PAGE = u"string(//*[@class='fc_ch1']/parent::a/@href)"
 next_url = urllib.parse.urlparse(HOST_URL, mPage.xpath(XPATH_NEXT_PAGE))
-log("下一页: " + next_url.__str__())
+log("下一页: " + next_url.geturl())
 XPATH_ITEMS = u"//*[@class='hz']//tr"
 items = mPage.xpath(XPATH_ITEMS)
 items.pop(0)
@@ -60,15 +60,15 @@ for item in items:
     openCode6 = item.xpath(u"string(./td[2]//span[6])")
     openCode7 = item.xpath(u"string(./td[3]//span[1])")
     openCode8 = ''
-    openCodes = re.split('(\d+)', openCode7)
+    openCodes = re.split('\D', openCode7)
     if len(openCodes) > 1:
         openCode7 = openCodes[0]
-        openCode8 = openCodes[2]
+        openCode8 = openCodes[1]
     winners = re.sub('\D', '', item.xpath(u"string(./td[4])"))
     salesAmount = re.sub('\D', '', item.xpath(u"string(./td[5])"))
     prizePool = re.sub('\D', '', item.xpath(u"string(./td[6])"))
     detail = urllib.parse.urlparse(HOST_URL, item.xpath(u"string(./td[7]/a/@href)"))
     log(expect + ' code: ' + openCode1 + ',' + openCode2 + ',' + openCode3 + ',' + openCode4 + ','
         + openCode5 + ',' + openCode6 + ',' + openCode7 + ',' + openCode8 + ' winners: ' + winners
-        + winners + ' sales: ' + salesAmount + ' pool: ' + prizePool + ' detail: ' + detail.__str__())
+        + ' sales: ' + salesAmount + ' pool: ' + prizePool + ' detail: ' + detail.geturl())
 request.close()
