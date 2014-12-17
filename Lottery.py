@@ -60,7 +60,7 @@ for item in items:
     openCode6 = item.xpath(u"string(./td[2]//span[6])")
     openCode7 = item.xpath(u"string(./td[3]//span[1])")
     openCode8 = ''
-    openCodes = re.split('\D', openCode7)
+    openCodes = re.findall('\d+', openCode7)
     if len(openCodes) > 1:
         openCode7 = openCodes[0]
         openCode8 = openCodes[1]
