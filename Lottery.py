@@ -2,6 +2,8 @@
 #coding=utf8
 __author__ = 'pitty'
 
+DEBUG = True
+
 import urllib.request
 import urllib.parse
 import re
@@ -32,7 +34,7 @@ except ImportError:
         except ImportError:
           print("Failed to import ElementTree from any known place")
 
-DEBUG = True
+
 HOST_URL = 'http://www.cwl.gov.cn/kjxx/ssq/hmhz/'
 
 
@@ -40,35 +42,54 @@ def log(info):
     if DEBUG:
         print(info)
 
-request = urllib.request.urlopen(HOST_URL, timeout=10)
-mPage = request.read().lower().decode('utf8')
-mPage = etree.HTML(mPage)
-XPATH_NEXT_PAGE = u"string(//*[@class='fc_ch1']/parent::a/@href)"
-next_url = urllib.parse.urljoin(HOST_URL, mPage.xpath(XPATH_NEXT_PAGE))
-log("下一页: " + next_url)
-XPATH_ITEMS = u"//*[@class='hz']//tr"
-items = mPage.xpath(XPATH_ITEMS)
-items.pop(0)
-items.pop(0)
-for item in items:
-    expect = item.xpath(u"string(./td[1])")
-    openCode1 = item.xpath(u"string(./td[2]//span[1])")
-    openCode2 = item.xpath(u"string(./td[2]//span[2])")
-    openCode3 = item.xpath(u"string(./td[2]//span[3])")
-    openCode4 = item.xpath(u"string(./td[2]//span[4])")
-    openCode5 = item.xpath(u"string(./td[2]//span[5])")
-    openCode6 = item.xpath(u"string(./td[2]//span[6])")
-    openCode7 = item.xpath(u"string(./td[3]//span[1])")
-    openCode8 = ''
-    openCodes = re.findall('\d+', openCode7)
-    if len(openCodes) > 1:
-        openCode7 = openCodes[0]
-        openCode8 = openCodes[1]
-    winners = re.sub('\D', '', item.xpath(u"string(./td[4])"))
-    salesAmount = re.sub('\D', '', item.xpath(u"string(./td[5])"))
-    prizePool = re.sub('\D', '', item.xpath(u"string(./td[6])"))
-    detail = urllib.parse.urljoin(HOST_URL, item.xpath(u"string(./td[7]/a/@href)"))
-    log(expect + ' code: ' + openCode1 + ',' + openCode2 + ',' + openCode3 + ',' + openCode4 + ','
-        + openCode5 + ',' + openCode6 + ',' + openCode7 + ',' + openCode8 + ' winners: ' + winners
-        + ' sales: ' + salesAmount + ' pool: ' + prizePool + ' detail: ' + detail)
-request.close()
+
+def open_url(url):
+    log("打开：" + url)
+    request = urllib.request.urlopen(url, timeout=10)
+    page = request.read().lower().decode('utf8')
+    request.close()
+    return etree.HTML(page)
+
+
+def get_next_page(page):
+    xpath_next_page = u"string(//*[@class='fc_ch1']/parent::a/@href)"
+    next_url = urllib.parse.urljoin(HOST_URL, page.xpath(xpath_next_page))
+    log("下一页: " + next_url)
+    return next_url
+
+
+def get_lottery_items(page):
+    xpath_items = u"//*[@class='hz']//tr"
+    items = page.xpath(xpath_items)
+    items.pop(0)
+    items.pop(0)
+    v_list = []
+    for item in items:
+        blues = re.findall('(\d+)', item.xpath(u"string(./td[3]//span[1])"))
+        if len(blues) > 1:
+            blue1 = blues[0]
+            blue2 = blues[1]
+        else:
+            blue1 = blues[0]
+            blue2 = ''
+        v_dict = {'expect': item.xpath(u"string(./td[1])"),
+                  'red1': item.xpath(u"string(./td[2]//span[1])"),
+                  'red2': item.xpath(u"string(./td[2]//span[2])"),
+                  'red3': item.xpath(u"string(./td[2]//span[3])"),
+                  'red4': item.xpath(u"string(./td[2]//span[4])"),
+                  'red5': item.xpath(u"string(./td[2]//span[5])"),
+                  'red6': item.xpath(u"string(./td[2]//span[6])"),
+                  'blue1': blue1,
+                  'blue2': blue2,
+                  'winners': re.sub('\D', '', item.xpath(u"string(./td[4])")),
+                  'sales': re.sub('\D', '', item.xpath(u"string(./td[5])")),
+                  'pool': re.sub('\D', '', item.xpath(u"string(./td[6])")),
+                  'detail': urllib.parse.urljoin(HOST_URL, item.xpath(u"string(./td[7]/a/@href)"))}
+        v_list.append(v_dict)
+        log(v_dict)
+    log(v_list)
+    return v_list
+
+
+m_page = open_url(HOST_URL)
+get_lottery_items(m_page)
