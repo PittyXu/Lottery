@@ -4,9 +4,27 @@ __author__ = 'pitty'
 
 DEBUG = True
 
-import urllib.request
-import urllib.parse
 import re
+
+try:
+    from urllib import request
+    print ("import request")
+except ImportError:
+    try:
+        # Python 2.7
+        import urllib2 as request
+    except ImportError:
+        print("Failed to import urllib.request from any known place")
+
+try:
+    from urllib import parse as urlparse
+    print ("import urlparse")
+except ImportError:
+    try:
+        # Python 2.7
+        import urlparse
+    except ImportError:
+        print("Failed to import urlparse from any known place")
 
 try:
   from lxml import etree
@@ -45,9 +63,9 @@ def log(info):
 
 def open_url(url):
     log("打开：" + url)
-    request = urllib.request.urlopen(url, timeout=10)
-    page = request.read().lower().decode('utf8')
-    request.close()
+    req = request.urlopen(url, timeout=30)
+    page = req.read().lower().decode('utf8')
+    req.close()
     return etree.HTML(page)
 
 
@@ -55,7 +73,7 @@ def get_next_page(page):
     xpath_next_page = u"string((//*[@class='pagebar']//span)[3]/parent::a/@href)"
     next_url = page.xpath(xpath_next_page)
     if next_url:
-        next_url = urllib.parse.urljoin(HOST_URL, next_url)
+        next_url = urlparse.urljoin(HOST_URL, next_url)
         log("下一页: " + next_url)
         return next_url
     return None
@@ -85,7 +103,7 @@ def get_lottery_items(page):
                   'blue1': blue1,
                   'detail': {'sales': re.sub('\D', '', item.xpath(u"string(./td[5])")),
                              'pool': re.sub('\D', '', item.xpath(u"string(./td[6])")),
-                             'url': urllib.parse.urljoin(HOST_URL, item.xpath(u"string(./td[7]/a/@href)"))}}
+                             'url': urlparse.urljoin(HOST_URL, item.xpath(u"string(./td[7]/a/@href)"))}}
         if blue2:
             v_dict['blue2'] = blue2
         v_list.append(v_dict)
