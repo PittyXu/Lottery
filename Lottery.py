@@ -166,4 +166,27 @@ def get_lottery(url):
     if m_next_page:
         get_lottery(m_next_page)
 
+
+def to_bit_map(items, offset):
+    if offset > 8:
+        return
+    b = bytearray(int((len(items) * offset + 8 - 1) / 8))  # 结果
+    position = 0  # byte 位置
+    index = 0  # list 位置
+    b_pos = 0  # 结果位置
+    while index < len(items):
+        if offset + position <= 8:
+            b[b_pos] |= items[index] << ((8 - position) - offset)
+            position += offset
+            index += 1
+        else:
+            b[b_pos] |= items[index] >> (offset - (8 - position))
+            position = (offset - (8 - position)) - offset
+            b_pos += 1
+    return b
+
+
 get_lottery(HOST_URL)
+
+# b = to_bit_map([1, 1, 1, 1, 1, 1, 1, 1], 5)
+# log((''.join("{0:08b}".format(n) for n in b)))
